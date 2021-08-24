@@ -267,9 +267,8 @@ if __name__=="__main__":
 
     vcf_file_path = args.vcf
     output_file_path = args.output
-    annotator= args.splitTranscripts
+    annotator= args.splitAnnotator
     annotator_dict = { "s" : "snpeffANNSplit", "v" : "VepCSQSplit", "s,v" : "snpeffANNSplit,VepCSQSplit" , "None" : "skip"}
-analisi ha portato a 
     
     try:
         annotator_to_splitTranscripts = annotator_dict[annotator]
