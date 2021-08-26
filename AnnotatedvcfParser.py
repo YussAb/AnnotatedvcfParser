@@ -232,19 +232,20 @@ def pipe2Col(vcf, vcfTransplitted, annotator_to_split):
         annotator_to_split = annotator_to_split.split(",")
         annotator_to_splitsnpeff = annotator_to_split[0]
         annotator_to_splitvep =annotator_to_split[1]
-        ########################VEP###################
+        ########################SNPEFF###################
         annotatorsnpeff = info[annotatorsnpeff]
         annotatorSplit= str(annotatorsnpeff).split(":")
-        annotatorCSQ= annotatorSplit[1][:-1]
-        annotatorCSQsplit = annotatorCSQ.split("|")
+        annotatorANN= annotatorSplit[1][:-1]
+        annotatorANNsplit = annotatorANN.split("|")
+        annotatorANNsplit = ["SNPEFF_" + s for s in annotatorANNsplit]
+        df[annotatorANNsplit] = df[annotator_to_splitsnpeff].str.split("|",expand=True,)
         
-        df[annotatorCSQsplit] = df[annotator_to_splitsnpeff].str.split("|",expand=True,)
-        ####################SNPEFF####################
+        ####################VEP####################
         annotatorvep = info[annotatorvep]
         annotatorSplit= str(annotatorvep).split(":")
         annotatorCSQ= annotatorSplit[1][:-1]
         annotatorCSQsplit = annotatorCSQ.split("|")
-        
+        annotatorCSQsplit = ["VEP_" + s for s in annotatorCSQsplit]
         df[annotatorCSQsplit] = df[annotator_to_splitvep].str.split("|",expand=True,)
     else:
         annotator = info[annotatorInfo]
