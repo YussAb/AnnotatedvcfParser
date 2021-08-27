@@ -21,37 +21,77 @@ def readVCF(vcf):
     
     N.B VEP and SnpEff annotation are still unparsed for transcripts and pipes.
     """
-    filevcf ={ "CHROM" :[] , "POS" :[], "ID" :[], "REF" :[], "ALT":[], "QUAL":[],"FILTER":[], "INFO":[], "FORMAT":[], "NORMAL":[], "TUMOR":[] }
+    filevcf = parsereadVCF(vcf)
+    #filevcf ={ "CHROM" :[] , "POS" :[], "ID" :[], "REF" :[], "ALT":[], "QUAL":[],"FILTER":[], "INFO":[], "FORMAT":[], "NORMAL":[], "TUMOR":[] }
+    
+    vcf.seek(0)
     line=vcf.readline()
     while line != "":
         if line[0] == '#':
             pass
         else:
             vcf_fields=line.split()
-            filevcf["CHROM"].append(vcf_fields[0])
-            filevcf["POS"].append(vcf_fields[1])
-            filevcf["ID"].append(vcf_fields[2])
-            filevcf["REF"].append(vcf_fields[3])
-            filevcf["ALT"].append(vcf_fields[4])
-            filevcf["QUAL"].append(vcf_fields[5])
-            filevcf["FILTER"].append(vcf_fields[6])
-            filevcf["INFO"].append(vcf_fields[7])
-            filevcf["FORMAT"].append(vcf_fields[8])
-            filevcf["NORMAL"].append(vcf_fields[9])
-            filevcf["TUMOR"].append( vcf_fields[10])
+            for i,key in enumerate(filevcf.keys()):
+                filevcf[key].append(vcf_fields[i])
+            #filevcf["CHROM"].append(vcf_fields[0])
+            #filevcf["POS"].append(vcf_fields[1])
+            #filevcf["ID"].append(vcf_fields[2])
+            #filevcf["REF"].append(vcf_fields[3])
+            #filevcf["ALT"].append(vcf_fields[4])
+            #filevcf["QUAL"].append(vcf_fields[5])
+            #filevcf["FILTER"].append(vcf_fields[6])
+            #filevcf["INFO"].append(vcf_fields[7])
+            #filevcf["FORMAT"].append(vcf_fields[8])
+            #filevcf["NORMAL"].append(vcf_fields[9])
+            #filevcf["TUMOR"].append( vcf_fields[10])
         line=vcf.readline()
-    vcf.seek(0)
-    infoVal=readINFO(vcf)
+    
+    #############INFO###################
+    #1
     vcf.seek(0)
     header=readHeader(vcf)
     infoDict=info2dictionary(header)
+    #2
+    vcf.seek(0)
+    infoVal=readINFO(vcf)
     info= add2infodictionary(infoVal, infoDict)
     #https://stackoverflow.com/questions/40923429/delete-first-item-in-each-key-in-a-dictionary
     info= {k: info[k][1:] for k in info}
     filevcf.update(info)
     
+    ###########FORMAT
+    #1
+    formatDict=format2dictionary(header)
+    #print(formatDict)
+    #2
+    vcf.seek(0)
+    formatVal = readFORMAT(vcf)
+    format = add2infodictionary(formatVal, formatDict)
+    format= {k: format[k][1:] for k in format}
+     ##########
+     #QUESTO LO POSSO FARE SOLO QUA PERCHE'non FUNZIONA CON ADD2infoDICT
+    format = {k + '_normal': v for k, v in format.items()} 
+     ########
+    filevcf.update(format)
+    
     return filevcf
 
+
+def parsereadVCF(vcf):
+    """
+    Docs:
+    ...
+    """
+    header=[]
+    line=vcf.readline()
+    while line != "":
+        if line[0] == '#' and line[1] != '#':
+            header.append(line.rstrip("\n"))
+        line=vcf.readline()
+    header[0] = header[0][1:]
+    header = header[0].split("\t")
+    data = {k: [] for k in header}
+    return data
 
 
 def readHeader(vcf):
@@ -87,6 +127,24 @@ def info2dictionary(header):
     return infoDict
 
 
+def format2dictionary(header):
+    """
+    Docs:
+    This function take as input the output of readHeader(vcf)
+    and a dictionary as {"INFO_FIELD" : "Description=....."}
+    """
+    infoDict={}
+    for line in header:
+        if line.startswith("##FORMAT="):
+                info=line
+                info=info.split(",")
+                infoID =info[0][13:]
+                infoDesc = info[3][:-2]
+                infoDict[infoID]= [infoDesc]
+
+    return infoDict
+
+
 def readINFO(vcf):
     """
     Docs:
@@ -111,6 +169,43 @@ def readINFO(vcf):
                 vcfDict[val[0]] = val[1]
             filevcf.append(vcfDict)
         line=vcf.readline()
+    return filevcf
+
+
+def readFORMAT(vcf):
+    """
+    Docs:
+    This function take as input a vcf file [e.g. vcf_file=open(vcf_file_path, "r")]
+    and return a list of dictionaries for each vcf row.
+    """
+    filevcf =[]
+    line=vcf.readline()
+    while line != "":
+        if line[0] == '#':
+            pass
+        else:
+            vcf_fields=line.split()
+            nc = len(vcf_fields) - 9
+
+            d = {}
+            if nc == 1:
+                #WORK IN PROGRESSSSSSSS
+                print("Devo fare una tpl di 1 val")
+                
+            elif nc == 2:
+                FORMAT=vcf_fields[8]
+                FORMAT=FORMAT.split(":")
+                sample1 = vcf_fields[9]
+                sample1 = sample1.split(":")
+                sample2 = vcf_fields[9]
+                sample2 = sample2.split(":")
+                d=zip(FORMAT ,sample1)
+                d = dict(d)
+                #d = {k: (sample1,sample2) for k in FORMAT}
+                filevcf.append(d)
+        line=vcf.readline()
+        
+    
     return filevcf
 
 
@@ -280,8 +375,7 @@ if __name__=="__main__":
     except:
         sys.exit("The file {} doesn't exist".format(vcf_file_path))
         
-        
-         
+
     vcfFile = readVCF(vcf_file)
     #print(annotator_to_splitTranscripts)
     ###################################BUG################################################
