@@ -59,6 +59,7 @@ def readVCF(vcf):
     info= {k: info[k][1:] for k in info}
     filevcf.update(info)
     
+    """
     ###########FORMAT
     #1
     formatDict=format2dictionary(header)
@@ -68,11 +69,12 @@ def readVCF(vcf):
     formatVal = readFORMAT(vcf)
     format = add2infodictionary(formatVal, formatDict)
     format= {k: format[k][1:] for k in format}
-     ##########
-     #QUESTO LO POSSO FARE SOLO QUA PERCHE'non FUNZIONA CON ADD2infoDICT
-    format = {k + '_normal': v for k, v in format.items()} 
-     ########
+    ##########
+    #QUESTO LO POSSO FARE SOLO QUA PERCHE'non FUNZIONA CON ADD2infoDICT
+    format = {k + '_normal': v for k, v in format.items()}
+    ########
     filevcf.update(format)
+    """
     
     return filevcf
 
@@ -175,10 +177,10 @@ def readINFO(vcf):
 def readFORMAT(vcf):
     """
     Docs:
-    This function take as input a vcf file [e.g. vcf_file=open(vcf_file_path, "r")]
-    and return a list of dictionaries for each vcf row.
+    ....
     """
     filevcf =[]
+    filevcf2 = []
     line=vcf.readline()
     while line != "":
         if line[0] == '#':
@@ -186,26 +188,32 @@ def readFORMAT(vcf):
         else:
             vcf_fields=line.split()
             nc = len(vcf_fields) - 9
-
-            d = {}
             if nc == 1:
-                #WORK IN PROGRESSSSSSSS
-                print("Devo fare una tpl di 1 val")
-                
-            elif nc == 2:
+                d = {}
                 FORMAT=vcf_fields[8]
                 FORMAT=FORMAT.split(":")
                 sample1 = vcf_fields[9]
                 sample1 = sample1.split(":")
-                sample2 = vcf_fields[9]
-                sample2 = sample2.split(":")
                 d=zip(FORMAT ,sample1)
                 d = dict(d)
-                #d = {k: (sample1,sample2) for k in FORMAT}
                 filevcf.append(d)
+            elif nc == 2:
+                d1 = {}
+                d2 = {}
+                FORMAT=vcf_fields[8]
+                FORMAT=FORMAT.split(":")
+                sample1 = vcf_fields[9]
+                sample1 = sample1.split(":")
+                sample2 = vcf_fields[10]
+                sample2 = sample2.split(":")
+                d1=zip(FORMAT ,sample1)
+                d2=zip(FORMAT ,sample2)
+                d1 = dict(d1)
+                d2 = dict(d2)
+                #d = {k: (sample1,sample2) for k in FORMAT}
+                filevcf.append(d2)
+                filevcf2.append(d2)
         line=vcf.readline()
-        
-    
     return filevcf
 
 
