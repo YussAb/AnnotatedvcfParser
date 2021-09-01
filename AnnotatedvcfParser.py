@@ -45,35 +45,43 @@ def readVCF(vcf):
             #filevcf["NORMAL"].append(vcf_fields[9])
             #filevcf["TUMOR"].append( vcf_fields[10])
         line=vcf.readline()
-    
+
     ###########FORMAT
     #1
     vcf.seek(0)
     header=readHeader(vcf)
     formatDict=format2dictionary(header)
+    formatDict2=format2dictionary(header)
     #print(formatDict)
     #2
     vcf.seek(0)
-    print(len(filevcf))
+    #print(len(filevcf))
     nc = len(filevcf) - 9
     if nc == 1:
-        print("ONE SAMPLE")
-        print(filevcf.keys())
         keys_list = list(filevcf) 
-        print(keys_list[9])
-        formatVal = readFORMAT(vcf)
-        format = add2infodictionary(formatVal, formatDict)
-        format= {k: format[k][1:] for k in format}
-        format = {k + "_" + keys_list[9] : v for k, v in format.items()}
-        filevcf.update(format)
+        formatVal, formatVal2 = readFORMAT(vcf)
+        formt = add2infodictionary(formatVal, formatDict)
+        formt= {k: formt[k][1:] for k in formt}
+        formt = {k + "_" + keys_list[9] : v for k, v in formt.items()}
+        filevcf.update(formt)
     elif nc == 2:
-        print("TWO SAMPLES")
+        keys_list = list(filevcf) 
+        #print(keys_list[9])
+        #print(keys_list[10])
+        formatVal,formatVal2 = readFORMAT(vcf)
+        ####
+        formt = add2infodictionary(formatVal, formatDict)
+        formt= {k: formt[k][1:] for k in formt}
+        formt = {k + "_" + keys_list[9] : v for k, v in formt.items()}
+        filevcf.update(formt)
+        ####
+        format2 = add2infodictionary(formatVal2, formatDict2)
+        format2= {k: format2[k][1:] for k in format2}
+        format2 = {k + "_" + keys_list[10] : v for k, v in format2.items()}
+        filevcf.update(format2)
         
-    
-
     #############INFO###############
     #1
-   
     infoDict=info2dictionary(header)
     #2
     vcf.seek(0)
@@ -82,42 +90,6 @@ def readVCF(vcf):
     #https://stackoverflow.com/questions/40923429/delete-first-item-in-each-key-in-a-dictionary
     info= {k: info[k][1:] for k in info}
     filevcf.update(info)
-    
-   
-    
-    """
-    #############INFO###############
-    #1
-    vcf.seek(0)
-    header=readHeader(vcf)
-    infoDict=info2dictionary(header)
-    #2
-    vcf.seek(0)
-    infoVal=readINFO(vcf)
-    info= add2infodictionary(infoVal, infoDict)
-    #https://stackoverflow.com/questions/40923429/delete-first-item-in-each-key-in-a-dictionary
-    info= {k: info[k][1:] for k in info}
-    filevcf.update(info)
-    
-    
-    ###########FORMAT
-    #1
-    formatDict=format2dictionary(header)
-    #print(formatDict)
-    #2
-    vcf.seek(0)
-    
-    
-    formatVal = readFORMAT(vcf)
-    
-    format = add2infodictionary(formatVal, formatDict)
-    format= {k: format[k][1:] for k in format}
-    ##########
-    #QUESTO LO POSSO FARE SOLO QUA PERCHE'non FUNZIONA CON ADD2infoDICT
-    format = {k + '_normal': v for k, v in format.items()}
-    ########
-    filevcf.update(format)
-    """
     
     return filevcf
 
@@ -254,10 +226,11 @@ def readFORMAT(vcf):
                 d1 = dict(d1)
                 d2 = dict(d2)
                 #d = {k: (sample1,sample2) for k in FORMAT}
-                filevcf.append(d2)
+                filevcf.append(d1)
                 filevcf2.append(d2)
         line=vcf.readline()
-    return filevcf
+        
+    return filevcf, filevcf2
 
 
 def add2infodictionary(infoVal,infoDict):
