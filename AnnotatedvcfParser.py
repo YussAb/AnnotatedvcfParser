@@ -21,18 +21,102 @@ def readVCF(vcf):
     
     N.B VEP and SnpEff annotation are still unparsed for transcripts and pipes.
     """
-    filevcf = parsereadVCF(vcf)
+    #filevcf = parsereadVCF(vcf)
     #filevcf ={ "CHROM" :[] , "POS" :[], "ID" :[], "REF" :[], "ALT":[], "QUAL":[],"FILTER":[], "INFO":[], "FORMAT":[], "NORMAL":[], "TUMOR":[] }
     
-    vcf.seek(0)
+    #vcf.seek(0)
     line=vcf.readline()
+    header = []
     while line != "":
-        if line[0] == '#':
-            pass
-        else:
+        if line[:2] == ('##'):
+            #header,line =readHeader(vcf)
+            #print(header[3521])
+            header.append(line.rstrip("\n"))
+            #pass
+        elif line.startswith('#C'):
+            formatDict=format2dictionary(header)
+            formatDict2=format2dictionary(header)
+            infoDict=info2dictionary(header)
+            filevcf = parsereadVCF(line)
+        elif line[0] != '#':
+            #lenVCF = len(filevcf)
             vcf_fields=line.split()
+            #print(len(filevcf))
+            #print(lenVCF)
+            #############GOOD THE FIRST CYCLE, GET PROBLEM WITH THE SECOND
             for i,key in enumerate(filevcf.keys()):
                 filevcf[key].append(vcf_fields[i])
+
+            ########al posto di file vcf creo un'altro dict
+            
+            #fileTEST= {}
+            nc = len(filevcf) - 9
+            if nc == 1:
+                keys_list = list(filevcf) 
+                formatVal, formatVal2 = readFORMAT(line,header)
+                formt = add2infodictionary(formatVal, formatDict)
+                formt= {k: formt[k][1:] for k in formt}
+                formt = {k + "_" + keys_list[9] : v for k, v in formt.items()}
+                #fileTEST.update(formt)
+               
+            elif nc == 2:
+                keys_list = list(filevcf)
+                #print(keys_list[9])
+                #print(keys_list[10])
+                formatVal,formatVal2 = readFORMAT(line,header)
+                ####
+                formt = add2infodictionary(formatVal, formatDict)
+                formt= {k: formt[k][1:] for k in formt}
+                formt = {k + "_" + keys_list[9] : v for k, v in formt.items()}
+                #fileTEST.update(formt)
+                ####
+                format2 = add2infodictionary(formatVal2, formatDict2)
+                format2= {k: format2[k][1:] for k in format2}
+                format2 = {k + "_" + keys_list[10] : v for k, v in format2.items()}
+                #fileTEST.update(format2)   
+                #2
+            #vcf.seek(0)
+            infoVal=readINFO(line)
+            info= add2infodictionary(infoVal, infoDict)
+            #https://stackoverflow.com/questions/40923429/delete-first-item-in-each-key-in-a-dictionary
+            info= {k: info[k][1:] for k in info}
+            #filevcf.update(info)
+            ########al posto di file vcf creo un'altro dict
+    
+            """
+            nc = len(filevcf) - 9
+            if nc == 1:
+                keys_list = list(filevcf) 
+                formatVal, formatVal2 = readFORMAT(vcf)
+                formt = add2infodictionary(formatVal, formatDict)
+                formt= {k: formt[k][1:] for k in formt}
+                formt = {k + "_" + keys_list[9] : v for k, v in formt.items()}
+                filevcf.update(formt)
+            elif nc == 2:
+                keys_list = list(filevcf) 
+                #print(keys_list[9])
+                #print(keys_list[10])
+                formatVal,formatVal2 = readFORMAT(line)
+                ####
+                formt = add2infodictionary(formatVal, formatDict)
+                formt= {k: formt[k][1:] for k in formt}
+                formt = {k + "_" + keys_list[9] : v for k, v in formt.items()}
+                filevcf.update(formt)
+                ####
+                format2 = add2infodictionary(formatVal2, formatDict2)
+                format2= {k: format2[k][1:] for k in format2}
+                format2 = {k + "_" + keys_list[10] : v for k, v in format2.items()}
+                filevcf.update(format2)
+                
+            infoDict=info2dictionary(header)
+                #2
+            #vcf.seek(0)
+            infoVal=readINFO(line)
+            info= add2infodictionary(infoVal, infoDict)
+            #https://stackoverflow.com/questions/40923429/delete-first-item-in-each-key-in-a-dictionary
+            info= {k: info[k][1:] for k in info}
+            filevcf.update(info)
+            """
             #filevcf["CHROM"].append(vcf_fields[0])
             #filevcf["POS"].append(vcf_fields[1])
             #filevcf["ID"].append(vcf_fields[2])
@@ -44,71 +128,90 @@ def readVCF(vcf):
             #filevcf["FORMAT"].append(vcf_fields[8])
             #filevcf["NORMAL"].append(vcf_fields[9])
             #filevcf["TUMOR"].append( vcf_fields[10])
+
         line=vcf.readline()
 
     ###########FORMAT
     #1
-    vcf.seek(0)
-    header=readHeader(vcf)
-    formatDict=format2dictionary(header)
-    formatDict2=format2dictionary(header)
+    #vcf.seek(0)
+    #header=readHeader(vcf)
+    #formatDict=format2dictionary(header)
+    #formatDict2=format2dictionary(header)
     #print(formatDict)
     #2
-    vcf.seek(0)
+    #vcf.seek(0)
     #print(len(filevcf))
-    nc = len(filevcf) - 9
-    if nc == 1:
-        keys_list = list(filevcf) 
-        formatVal, formatVal2 = readFORMAT(vcf)
-        formt = add2infodictionary(formatVal, formatDict)
-        formt= {k: formt[k][1:] for k in formt}
-        formt = {k + "_" + keys_list[9] : v for k, v in formt.items()}
-        filevcf.update(formt)
-    elif nc == 2:
-        keys_list = list(filevcf) 
+    #nc = len(filevcf) - 9
+    #if nc == 1:
+    #    keys_list = list(filevcf) 
+    #    formatVal, formatVal2 = readFORMAT(vcf)
+    #    formt = add2infodictionary(formatVal, formatDict)
+    #    formt= {k: formt[k][1:] for k in formt}
+    #    formt = {k + "_" + keys_list[9] : v for k, v in formt.items()}
+    #    filevcf.update(formt)
+    #elif nc == 2:
+    #    keys_list = list(filevcf) 
         #print(keys_list[9])
         #print(keys_list[10])
-        formatVal,formatVal2 = readFORMAT(vcf)
+    #    formatVal,formatVal2 = readFORMAT(vcf)
         ####
-        formt = add2infodictionary(formatVal, formatDict)
-        formt= {k: formt[k][1:] for k in formt}
-        formt = {k + "_" + keys_list[9] : v for k, v in formt.items()}
-        filevcf.update(formt)
+    #    formt = add2infodictionary(formatVal, formatDict)
+    #    formt= {k: formt[k][1:] for k in formt}
+    #    formt = {k + "_" + keys_list[9] : v for k, v in formt.items()}
+    #    filevcf.update(formt)
         ####
-        format2 = add2infodictionary(formatVal2, formatDict2)
-        format2= {k: format2[k][1:] for k in format2}
-        format2 = {k + "_" + keys_list[10] : v for k, v in format2.items()}
-        filevcf.update(format2)
+    #    format2 = add2infodictionary(formatVal2, formatDict2)
+    #    format2= {k: format2[k][1:] for k in format2}
+    #    format2 = {k + "_" + keys_list[10] : v for k, v in format2.items()}
+    #    filevcf.update(format2)
         
     #############INFO###############
     #1
-    infoDict=info2dictionary(header)
+#    infoDict=info2dictionary(header)
     #2
-    vcf.seek(0)
-    infoVal=readINFO(vcf)
-    info= add2infodictionary(infoVal, infoDict)
+#   vcf.seek(0)
+#   infoVal=readINFO(vcf)
+#   info= add2infodictionary(infoVal, infoDict)
     #https://stackoverflow.com/questions/40923429/delete-first-item-in-each-key-in-a-dictionary
-    info= {k: info[k][1:] for k in info}
+#    info= {k: info[k][1:] for k in info}
+    #info= {k: info[k][1:] for k in info}
     filevcf.update(info)
-    
+    filevcf.update(formt)
+    filevcf.update(format2)
     return filevcf
 
 
-def parsereadVCF(vcf):
+def parsereadVCF(line):
     """
     Docs:
     ...
     """
     header=[]
-    line=vcf.readline()
-    while line != "":
-        if line[0] == '#' and line[1] != '#':
-            header.append(line.rstrip("\n"))
-        line=vcf.readline()
+    #line=vcf.readline()
+    #while line != "":
+    #    if line[0] == '#' and line[1] != '#':
+    header.append(line.rstrip("\n"))
+    #    line=vcf.readline()
     header[0] = header[0][1:]
     header = header[0].split("\t")
     data = {k: [] for k in header}
     return data
+
+#########################################DEPRECATED_START
+#def readHeader(vcf):
+#    """
+#    Docs:
+#    This function take as input a vcf file [e.g. vcf_file=open(vcf_file_path, "r")]
+#    and return only the header of the vcf file
+#    """
+#    header=[]
+#    line=vcf.readline()
+#    while line[:2] == "##":
+#        #if line.startswith('#'):
+#        header.append(line.rstrip("\n"))
+#        line=vcf.readline()
+#    return header,line
+#########################################DEPRECATED_END
 
 
 def readHeader(vcf):
@@ -122,8 +225,11 @@ def readHeader(vcf):
     while line != "":
         if line.startswith('#'):
             header.append(line.rstrip("\n"))
+        else:
+            break
         line=vcf.readline()
-    return header
+    return header 
+
 
 
 def info2dictionary(header):
@@ -162,73 +268,74 @@ def format2dictionary(header):
     return infoDict
 
 
-def readINFO(vcf):
+def readINFO(line):
     """
     Docs:
     This function take as input a vcf file [e.g. vcf_file=open(vcf_file_path, "r")]
     and return a list of dictionaries for each vcf row.
     """
     filevcf =[]
-    line=vcf.readline()
-    while line != "":
-        if line[0] == '#':
-            pass
-        else:
-            vcf_fields=line.split()
-            INFO=vcf_fields[7]
-            INFO=INFO.split(";")
-            valSplit = [val.split("=") for val in INFO]
-            for val in valSplit: 
-                if len(val) < 2:
-                    val.append("TRUE")
-            vcfDict={}
-            for val in valSplit:
-                vcfDict[val[0]] = val[1]
-            filevcf.append(vcfDict)
-        line=vcf.readline()
+    #line=vcf.readline()
+    #while line != "":
+    #    if line[0] == '#':
+    #        pass
+    #    else:
+    vcf_fields=line.split()
+    INFO=vcf_fields[7]
+    INFO=INFO.split(";")
+    valSplit = [val.split("=") for val in INFO]
+    for val in valSplit: 
+        if len(val) < 2:
+            val.append("TRUE")
+    vcfDict={}
+    for val in valSplit:
+        vcfDict[val[0]] = val[1]
+    filevcf.append(vcfDict)
+    #line=vcf.readline()
     return filevcf
 
 
-def readFORMAT(vcf):
+def readFORMAT(line,header):
     """
     Docs:
     ....
     """
     filevcf =[]
     filevcf2 = []
-    line=vcf.readline()
-    while line != "":
-        if line[0] == '#':
-            pass
-        else:
-            vcf_fields=line.split()
-            nc = len(vcf_fields) - 9
-            if nc == 1:
-                d = {}
-                FORMAT=vcf_fields[8]
-                FORMAT=FORMAT.split(":")
-                sample1 = vcf_fields[9]
-                sample1 = sample1.split(":")
-                d=zip(FORMAT ,sample1)
-                d = dict(d)
-                filevcf.append(d)
-            elif nc == 2:
-                d1 = {}
-                d2 = {}
-                FORMAT=vcf_fields[8]
-                FORMAT=FORMAT.split(":")
-                sample1 = vcf_fields[9]
-                sample1 = sample1.split(":")
-                sample2 = vcf_fields[10]
-                sample2 = sample2.split(":")
-                d1=zip(FORMAT ,sample1)
-                d2=zip(FORMAT ,sample2)
-                d1 = dict(d1)
-                d2 = dict(d2)
-                #d = {k: (sample1,sample2) for k in FORMAT}
-                filevcf.append(d1)
-                filevcf2.append(d2)
-        line=vcf.readline()
+    #line=vcf.readline()
+    #while line != "":
+    #    if line[0] == '#':
+    #        pass
+    #    else:
+    vcf_fields=line.split()
+    nc = len(vcf_fields) - 9
+    if nc == 1:
+        d = {}
+        FORMAT=vcf_fields[8]
+        FORMAT=FORMAT.split(":")
+        sample1 = vcf_fields[9]
+        sample1 = sample1.split(":")
+        d=zip(FORMAT ,sample1)
+        d = dict(d)
+        filevcf.append(d)
+    elif nc == 2:
+        d1 = {}
+        d2 = {}
+        FORMAT=vcf_fields[8]
+        FORMAT=FORMAT.split(":")
+        sample1 = vcf_fields[9]
+        sample1 = sample1.split(":")
+        sample2 = vcf_fields[10]
+        sample2 = sample2.split(":")
+        d1=zip(FORMAT ,sample1)
+        d2=zip(FORMAT ,sample2)
+        d1 = dict(d1)  
+        infoDict=info2dictionary(header)
+        d2 = dict(d2)
+        #d = {k: (sample1,sample2) for k in FORMAT}
+        filevcf.append(d1)
+        filevcf2.append(d2)
+    #line=vcf.readline()
         
     return filevcf, filevcf2
 
@@ -341,6 +448,9 @@ def pipe2Col(vcf, vcfTransplitted, annotator_to_split):
     annotator_dict = {"snpeffANNSplit" : "ANN",  "VepCSQSplit" : "CSQ" , "snpeffANNSplit,VepCSQSplit" : "ANN,CSQ"}
     annotatorInfo = annotator_dict[annotator_to_split]
     df = vcfTransplitted.copy()
+    #####################################àà##############
+    #######################BUG
+    ###################################################à
     vcf.seek(0)
     header= readHeader(vcf)
     info = info2dictionary(header)
