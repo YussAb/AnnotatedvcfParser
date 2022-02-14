@@ -307,7 +307,11 @@ def splitransciptsVepSnpEff(vcfDict, annotator_to_split):
                          "VepCSQSplit" [parse only CSQ field]
                          "snpeffANNSplit,VepCSQSplit" [parse both ANN and CSQ fields]
     """
-    df =  pd.DataFrame.from_dict(vcfDict)
+    #OLD
+    #df =  pd.DataFrame.from_dict(vcfDict)
+    #NEW
+    #NEW TEST FROM: https://stackoverflow.com/questions/19736080/creating-dataframe-from-a-dictionary-where-entries-have-different-lengths
+    df = pd.DataFrame(dict([ (k,pd.Series(v)) for k,v in vcfDict.items() ]))
     #Split Column containing lists into different rows in pandas
     #https://stackoverflow.com/questions/42012152/unstack-a-pandas-column-containing-lists-into-multiple-rows
     #Split a Pandas column of lists into multiple columns
@@ -437,7 +441,15 @@ if __name__=="__main__":
         
         vcfFileTransplittedPipe.to_csv(output_file_path)
     else:
-        vcfFile = pd.DataFrame.from_dict(vcfFile)
+        #OLD VERSION -MORE SECURE-
+        #vcfFile = pd.DataFrame.from_dict(vcfFile)
+        #NEW TEST FROM: https://stackoverflow.com/questions/19736080/creating-dataframe-from-a-dictionary-where-entries-have-different-lengths
+        #Added step to check if the elements has the same key lenght
+        print("Number of value for each field are:")
+        for key in vcfFile.keys():
+            print(key)
+            print(len(vcfFile[key]))
+        vcfFile = pd.DataFrame(dict([ (k,pd.Series(v)) for k,v in vcfFile.items() ]))
         vcfFile.replace(".", "NA", inplace=True)
         vcfFile.replace("", "NA", inplace=True)
         vcfFile.replace("NA", np.nan, inplace=True)
