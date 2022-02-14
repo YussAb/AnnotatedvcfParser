@@ -405,6 +405,16 @@ if __name__=="__main__":
         
 
     vcfFile = readVCF(vcf_file)
+    
+    
+    #NEW OPTION TO CONSIDER ALSO EMPTY VCF FILES
+    checkvcfFile= bool([a for a in vcfFile.values() if a != []])
+    if checkvcfFile is False:
+        print("vcf file is empty")
+        vcfFile = pd.DataFrame.from_dict(vcfFile)
+        vcfFile.to_csv(output_file_path)
+        exit()
+    
     #print(annotator_to_splitTranscripts)
     ###################################BUG################################################
     #vcfFileTransplisted = transcipts2ListVepSnpEff(vcfFile)
